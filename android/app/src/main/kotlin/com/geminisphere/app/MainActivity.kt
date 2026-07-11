@@ -1,4 +1,4 @@
-package com.example.google_assistant
+package com.geminisphere.app
 
 import io.flutter.embedding.android.FlutterActivity
 
