@@ -57,6 +57,7 @@ android {
             // For debug signing (dev builds). Replace with your keystore for production.
             signingConfig signingConfigs.debug
             minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
