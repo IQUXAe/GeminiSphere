@@ -24,34 +24,27 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install FVM
-        run: dart pub global activate fvm
-
-      - name: Cache FVM Flutter
-        uses: actions/cache@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          path: ~/.fvm/versions
-          key: fvm-3.22.3
-          restore-keys: fvm-
-
-      - name: Install Flutter via FVM
-        run: fvm install 3.22.3
+          flutter-version: '3.22.3'
+          channel: 'stable'
 
       - name: Get Flutter dependencies
-        run: fvm flutter pub get
+        run: flutter pub get
 
       - name: Run code generation (build_runner)
-        run: fvm flutter pub run build_runner build --delete-conflicting-outputs
+        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Analyze Flutter code
-        run: fvm flutter analyze --no-fatal-infos
+        run: flutter analyze --no-fatal-infos
         continue-on-error: true
 
       - name: Build APK (release)
-        run: fvm flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi
 
       - name: Build APK (universal, for sideloading)
-        run: fvm flutter build apk --release
+        run: flutter build apk --release
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4

@@ -18,27 +18,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install FVM
-        run: dart pub global activate fvm
-        
-      - name: Add Dart to PATH
-        run: echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
-
-      - name: Cache FVM Flutter
-        uses: actions/cache@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          path: ~/.fvm/versions
-          key: fvm-macos-3.22.3
-          restore-keys: fvm-macos-
-
-      - name: Install Flutter via FVM
-        run: fvm install 3.22.3
+          flutter-version: '3.22.3'
+          channel: 'stable'
 
       - name: Get Flutter dependencies
-        run: fvm flutter pub get
+        run: flutter pub get
 
       - name: Run code generation (build_runner)
-        run: fvm flutter pub run build_runner build --delete-conflicting-outputs
+        run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Install CocoaPods dependencies
         run: |
@@ -47,7 +37,7 @@ jobs:
           cd ..
 
       - name: Build iOS (no codesign - for AltStore/SideStore sideloading)
-        run: fvm flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign
 
       - name: Package IPA
         run: |
