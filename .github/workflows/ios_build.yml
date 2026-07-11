@@ -58,8 +58,11 @@ jobs:
           </plist>
           EOF
           
-          # Fakesign the app payload
-          codesign -s - --entitlements Entitlements.plist --deep --force build/ios/ipa/Payload/Runner.app
+          # Fakesign frameworks without entitlements
+          find build/ios/ipa/Payload/Runner.app/Frameworks -type d -name "*.framework" -exec codesign -s - --force {} \;
+          
+          # Fakesign the app payload with entitlements
+          codesign -s - --entitlements Entitlements.plist --force build/ios/ipa/Payload/Runner.app
           
           cd build/ios/ipa
           zip -r ../Runner.ipa Payload
