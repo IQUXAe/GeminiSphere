@@ -1,0 +1,91 @@
+name: gemini_sphere
+description: Open-source AI voice assistant smart display powered by Gemini Live API.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_bloc: ^8.1.6
+  bloc: ^8.1.4
+  equatable: ^2.0.5
+
+  # Code Generation / Immutable classes
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # Dependency Injection
+  get_it: ^8.0.2
+  injectable: ^2.4.4
+
+  # Functional programming
+  dartz: ^0.10.1
+
+  # Networking / WebSocket
+  web_socket_channel: ^2.4.5
+
+  # Audio recording (PCM from microphone)
+  record: ^5.1.2
+
+  # Audio playback (PCM chunks from Gemini)
+  just_audio: ^0.9.40
+
+  # Wake Word Detection (Vosk offline)
+  vosk_flutter: any
+
+  # Local Notifications (timers, alarms)
+  flutter_local_notifications: ^18.0.0
+
+  # Android alarm manager for reliable timer delivery
+  android_alarm_manager_plus: any
+
+  # Screen awake & brightness
+  wakelock_plus: ^1.2.8
+  screen_brightness: any
+
+  # Local storage
+  hive_flutter: ^1.1.0
+  hive: ^2.2.3
+  shared_preferences: ^2.3.3
+
+  # Permissions
+  permission_handler: ^10.2.0
+
+  # Animations
+  flutter_animate: ^4.5.0
+
+  # Utils
+  uuid: ^4.5.1
+  intl: ^0.19.0
+  path_provider: ^2.1.4
+  logger: ^2.4.0
+  rxdart: ^0.28.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: any
+  freezed: any
+  json_serializable: ^6.8.0
+  injectable_generator: ^2.6.2
+  hive_generator: any
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/audio/
+
+  fonts:
+    - family: DigitalClock
+      fonts:
+        - asset: assets/fonts/digital_clock.ttf

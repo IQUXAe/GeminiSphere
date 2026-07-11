@@ -1,0 +1,37 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-raw-types: true
+  errors:
+    missing_required_param: error
+    missing_return: error
+    invalid_annotation_target: ignore  # needed for freezed
+  exclude:
+    - '**/*.g.dart'
+    - '**/*.freezed.dart'
+    - lib/core/di/injection.config.dart
+
+linter:
+  rules:
+    # Performance
+    avoid_unnecessary_containers: true
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    
+    # Clean Architecture
+    avoid_print: true
+    avoid_dynamic_calls: true
+    always_declare_return_types: true
+    
+    # Dart style
+    prefer_single_quotes: true
+    directives_ordering: true
+    unnecessary_lambdas: true
+    prefer_final_locals: true
+    
+    # Disabled for codegen compatibility
+    library_private_types_in_public_api: false
