@@ -28,11 +28,15 @@ class VoskWakeWordDataSource {
   Future<void> initialize(String modelEnPath, String modelRuPath) async {
     try {
       _vosk = VoskFlutterPlugin.instance();
+      final loader = ModelLoader();
 
       // Load English model
-      _modelEn = await _vosk!.createModel(modelEnPath);
+      final enPath = await loader.loadFromAssets(modelEnPath);
+      _modelEn = await _vosk!.createModel(enPath);
+      
       // Load Russian model
-      _modelRu = await _vosk!.createModel(modelRuPath);
+      final ruPath = await loader.loadFromAssets(modelRuPath);
+      _modelRu = await _vosk!.createModel(ruPath);
 
       // Create keyword-spotting recognizers
       // Grammar restricts recognition to only our keywords + ["[unk]"]
