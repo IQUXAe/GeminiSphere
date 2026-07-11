@@ -25,6 +25,8 @@ const List<String> kWakeWordKeywords = [
   'гемини',
 ];
 const double kWakeWordMinScore = 0.6;
+const String kVoskModelEnAssetPath = 'assets/models/vosk-model-small-en-us-0.15.zip';
+const String kVoskModelRuAssetPath = 'assets/models/vosk-model-small-ru-0.22.zip';
 
 // Silence file for iOS background mode keepalive
 const String kSilenceAudioAsset = 'assets/audio/silence.mp3';

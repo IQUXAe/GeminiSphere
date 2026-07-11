@@ -30,6 +30,7 @@ abstract interface class IGeminiRepository {
   /// Send tool response back to Gemini
   Future<Either<Failure, void>> sendToolResponse({
     required String toolCallId,
+    required String toolName,
     required dynamic result,
   });
 

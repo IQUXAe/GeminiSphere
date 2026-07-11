@@ -73,6 +73,7 @@ class HandleToolCall {
 
     return _geminiRepo.sendToolResponse(
       toolCallId: toolCall.id,
+      toolName: toolCall.name,
       result: result,
     );
   }

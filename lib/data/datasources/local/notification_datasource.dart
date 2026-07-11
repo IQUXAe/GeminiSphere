@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:logger/logger.dart';
+import 'package:timezone/timezone.dart' as tz;
 import '../../../core/errors/exceptions.dart';
 
 class NotificationDataSource {
@@ -64,7 +65,7 @@ class NotificationDataSource {
         notificationId,
         title,
         body,
-        scheduledTime,
+        tz.TZDateTime.from(scheduledTime, tz.local),
         NotificationDetails(
           android: AndroidNotificationDetails(
             _channelId,

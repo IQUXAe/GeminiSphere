@@ -31,7 +31,7 @@ dependencies:
   web_socket_channel: ^2.4.5
 
   # Audio recording (PCM from microphone)
-  record: any
+  record: ^5.2.1
 
   # Audio playback (PCM chunks from Gemini)
   just_audio: ^0.9.40
@@ -78,14 +78,18 @@ dev_dependencies:
   bloc_test: ^9.1.7
   mocktail: ^1.0.4
 
+
 dependency_overrides:
-  record_linux: any
+  record_linux: 1.1.1
+  vosk_flutter:
+    path: packages/vosk_flutter
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/audio/
+    - assets/models/
 
   fonts:
     - family: DigitalClock

@@ -69,10 +69,11 @@ class GeminiRepositoryImpl implements IGeminiRepository {
   @override
   Future<Either<Failure, void>> sendToolResponse({
     required String toolCallId,
+    required String toolName,
     required dynamic result,
   }) async {
     try {
-      _dataSource.sendToolResponse(toolCallId: toolCallId, result: result);
+      _dataSource.sendToolResponse(toolCallId: toolCallId, toolName: toolName, result: result);
       return const Right(null);
     } on GeminiApiException catch (e) {
       return Left(Failure.server(message: e.message));

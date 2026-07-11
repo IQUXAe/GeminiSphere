@@ -119,7 +119,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 _systemPromptField(),
                 const SizedBox(height: 20),
                 _slider('Temperature', _temperature, 0.0, 2.0, (v) => setState(() => _temperature = double.parse(v.toStringAsFixed(1))),
-                    label: _temperature.toStringAsFixed(1)),
+                    label2: _temperature.toStringAsFixed(1)),
                 const SizedBox(height: 16),
                 _dropdown<ThinkingLevel>(
                   'Thinking Level',
@@ -149,7 +149,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 12),
                 _slider('Sensitivity', _wakeWordSensitivity, 0.1, 1.0,
                     (v) => setState(() => _wakeWordSensitivity = double.parse(v.toStringAsFixed(2))),
-                    label: _wakeWordSensitivity.toStringAsFixed(2)),
+                    label2: _wakeWordSensitivity.toStringAsFixed(2)),
               ]),
               _sectionHeader('Always-On Display'),
               _card([

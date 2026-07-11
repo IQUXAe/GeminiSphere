@@ -36,17 +36,15 @@ class VoskWakeWordDataSource {
 
       // Create keyword-spotting recognizers
       // Grammar restricts recognition to only our keywords + ["[unk]"]
-      final grammar = jsonEncode(kWakeWordKeywords);
-
       _recognizerEn = await _vosk!.createRecognizer(
         model: _modelEn!,
         sampleRate: kMicSampleRate,
-        grammar: grammar,
+        grammar: kWakeWordKeywords,
       );
       _recognizerRu = await _vosk!.createRecognizer(
         model: _modelRu!,
         sampleRate: kMicSampleRate,
-        grammar: grammar,
+        grammar: kWakeWordKeywords,
       );
 
       _logger.i('[Vosk] Initialized EN + RU models');

@@ -253,7 +253,7 @@ class AppTheme {
       ),
 
       // ── Card ─────────────────────────────────────────────────────────────
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: AppColors.surfaceElevated,
         elevation: 0,
         margin: EdgeInsets.zero,
@@ -435,7 +435,7 @@ class AppTheme {
       ),
 
       // ── Dialog ────────────────────────────────────────────────────────────
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: AppColors.surfaceElevated,
         elevation: 8,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -480,7 +480,7 @@ class AppTheme {
       ),
 
       // ── Tab Bar ───────────────────────────────────────────────────────────
-      tabBarTheme: TabBarThemeData(
+      tabBarTheme: TabBarTheme(
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.textSecondary,
         indicatorColor: AppColors.primary,
