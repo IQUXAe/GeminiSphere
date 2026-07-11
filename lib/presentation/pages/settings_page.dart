@@ -15,6 +15,18 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
+class _SettingsPageState extends State<SettingsPage> {
+  late TextEditingController _apiKeyController;
+  late TextEditingController _modelController;
+  late TextEditingController _systemPromptController;
+  double _temperature = 1.0;
+  ThinkingLevel _thinkingLevel = ThinkingLevel.low;
+  double _wakeWordSensitivity = 0.6;
+  AodClockStyle _aodClockStyle = AodClockStyle.digital;
+  int _aodScrollSpeed = 30;
+  AppLanguage _language = AppLanguage.auto;
+  bool _showApiKey = false;
+  bool _initialized = false;
   bool _isSaving = false;
 
   @override
