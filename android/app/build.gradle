@@ -43,6 +43,22 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv("KEYSTORE_PATH") ?: 'upload-keystore.jks'
+            def keystorePassword = System.getenv("KEYSTORE_PASSWORD")
+            def keyAliasName = System.getenv("KEY_ALIAS")
+            def keyAliasPassword = System.getenv("KEY_PASSWORD")
+
+            if (keystorePassword != null) {
+                storeFile file(keystorePath)
+                storePassword keystorePassword
+                keyAlias keyAliasName
+                keyPassword keyAliasPassword
+            }
+        }
+    }
+
     defaultConfig {
         applicationId 'com.geminisphere.app'
         // Android 5.0 Lollipop - supports legacy devices
@@ -55,8 +71,7 @@ android {
 
     buildTypes {
         release {
-            // For debug signing (dev builds). Replace with your keystore for production.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
