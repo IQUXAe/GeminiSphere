@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:screen_brightness/screen_brightness.dart';
+
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'display_event.dart';
 import 'display_state.dart';
@@ -49,16 +49,11 @@ class DisplayBloc extends Bloc<DisplayEvent, DisplayState> {
   }
 
   Future<void> _applyBrightness(double value) async {
-    try {
-      await ScreenBrightness().setScreenBrightness(value);
-    } catch (_) {
-      // Screen brightness control may not be available on all platforms
-    }
+    // Brightness control removed to support legacy iOS 12 devices
   }
 
   @override
   Future<void> close() async {
-    try { await ScreenBrightness().resetScreenBrightness(); } catch (_) {}
     return super.close();
   }
 }

@@ -45,9 +45,8 @@ dependencies:
   # Android alarm manager for reliable timer delivery
   android_alarm_manager_plus: any
 
-  # Screen awake & brightness
+  # Screen awake
   wakelock_plus: ^1.2.8
-  screen_brightness: any
 
   # Local storage
   hive_flutter: ^1.1.0
