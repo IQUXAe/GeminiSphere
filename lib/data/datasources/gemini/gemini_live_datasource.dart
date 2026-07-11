@@ -96,7 +96,7 @@ class GeminiLiveDataSource {
       _isConnected = false;
       _connectionController.add(false);
       throw GeminiApiException(
-        'Failed to connect to Gemini Live API',
+        'Failed to connect to Gemini Live API: $e',
         cause: e,
       );
     }

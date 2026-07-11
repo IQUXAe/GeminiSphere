@@ -132,7 +132,8 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildListTile(
               'Temperature',
               subtitle: _temperature.toStringAsFixed(1),
-              trailing: Expanded(
+              trailing: SizedBox(
+                width: 150,
                 child: Slider(
                   value: _temperature,
                   min: 0.0,
@@ -170,7 +171,8 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildListTile(
               'Sensitivity',
               subtitle: _wakeWordSensitivity.toStringAsFixed(2),
-              trailing: Expanded(
+              trailing: SizedBox(
+                width: 150,
                 child: Slider(
                   value: _wakeWordSensitivity,
                   min: 0.1,
@@ -194,7 +196,8 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildListTile(
               'Drift Speed',
               subtitle: '${_aodScrollSpeed}s',
-              trailing: Expanded(
+              trailing: SizedBox(
+                width: 150,
                 child: Slider(
                   value: _aodScrollSpeed.toDouble(),
                   min: 10,

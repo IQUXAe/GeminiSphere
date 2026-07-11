@@ -55,6 +55,9 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   }
 
   void _initWakeWordListener() {
+    // Keep a persistent base reference to the microphone to prevent hardware shutdowns
+    _audioRepo.startMicrophoneCapture();
+
     _wakeWordSub = _wakeWordRepo.wakeWordStream.listen((event) {
       if (state.phase == SessionPhase.idle) {
         add(WakeWordDetected(event.keyword));
@@ -270,6 +273,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     await _cleanupSession();
     await _wakeWordSub?.cancel();
     await _wakeWordRepo.stopListening();
+    await _audioRepo.stopMicrophoneCapture();
     return super.close();
   }
 }
