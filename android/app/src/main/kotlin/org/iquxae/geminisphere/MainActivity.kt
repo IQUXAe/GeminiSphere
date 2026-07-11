@@ -1,4 +1,4 @@
-package com.geminisphere.app
+package org.iquxae.geminisphere
 
 import io.flutter.embedding.android.FlutterActivity
 
