@@ -15,18 +15,7 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
-  late TextEditingController _apiKeyController;
-  late TextEditingController _modelController;
-  late TextEditingController _systemPromptController;
-  double _temperature = 1.0;
-  ThinkingLevel _thinkingLevel = ThinkingLevel.low;
-  double _wakeWordSensitivity = 0.6;
-  AodClockStyle _aodClockStyle = AodClockStyle.digital;
-  int _aodScrollSpeed = 30;
-  AppLanguage _language = AppLanguage.auto;
-  bool _showApiKey = false;
-  bool _initialized = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -53,45 +42,47 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  AppSettings _buildSettings() => AppSettings(
-    apiKey: _apiKeyController.text.trim(),
-    model: _modelController.text.trim().isEmpty ? 'gemini-2.0-flash-live-001' : _modelController.text.trim(),
-    systemPrompt: _systemPromptController.text.trim(),
-    temperature: _temperature,
-    thinkingLevel: _thinkingLevel,
-    wakeWordSensitivity: _wakeWordSensitivity,
-    aodClockStyle: _aodClockStyle,
-    aodScrollSpeedSeconds: _aodScrollSpeed,
-    language: _language,
-  );
+  void _save() {
+    final s = AppSettings(
+      apiKey: _apiKeyController.text.trim(),
+      model: _modelController.text.trim().isEmpty ? 'gemini-2.0-flash-live-001' : _modelController.text.trim(),
+      systemPrompt: _systemPromptController.text.trim(),
+      temperature: _temperature,
+      thinkingLevel: _thinkingLevel,
+      wakeWordSensitivity: _wakeWordSensitivity,
+      aodClockStyle: _aodClockStyle,
+      aodScrollSpeedSeconds: _aodScrollSpeed,
+      language: _language,
+    );
+    _isSaving = true;
+    context.read<SettingsBloc>().add(UpdateSettingsEvent(s));
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<SettingsBloc, SettingsState>(
       listener: (ctx, state) {
-        if (state is SettingsLoaded) _initFromSettings(state.settings);
-        if (state is SettingsSaved) {
+        if (state is SettingsLoaded) {
           _initFromSettings(state.settings);
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            const SnackBar(
-              content: Text('Settings saved!'),
-              backgroundColor: AppColors.secondary,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-        if (state is SettingsError) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
-          );
+          if (_isSaving) {
+            _isSaving = false;
+            ScaffoldMessenger.of(ctx).showSnackBar(
+              const SnackBar(
+                content: Text('Settings saved'),
+                backgroundColor: AppColors.primary,
+                duration: Duration(seconds: 1),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.black,
         appBar: AppBar(
-          title: const Text('Settings'),
-          backgroundColor: AppColors.surface,
-          foregroundColor: AppColors.textPrimary,
+          title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.w400)),
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
           elevation: 0,
           actions: [
             TextButton(
@@ -99,221 +90,216 @@ class _SettingsPageState extends State<SettingsPage> {
                 context.read<SettingsBloc>().add(const ResetSettingsEvent());
                 setState(() => _initialized = false);
               },
-              child: const Text('Reset', style: TextStyle(color: AppColors.error)),
+              child: const Text('Reset', style: TextStyle(color: Colors.redAccent, fontSize: 16)),
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _sectionHeader('API Configuration'),
-              _card([
-                _apiKeyField(),
-                const SizedBox(height: 16),
-                _textField('Model', _modelController, hint: 'gemini-2.0-flash-live-001'),
-              ]),
-              _sectionHeader('AI Behavior'),
-              _card([
-                _systemPromptField(),
-                const SizedBox(height: 20),
-                _slider('Temperature', _temperature, 0.0, 2.0, (v) => setState(() => _temperature = double.parse(v.toStringAsFixed(1))),
-                    label2: _temperature.toStringAsFixed(1)),
-                const SizedBox(height: 16),
-                _dropdown<ThinkingLevel>(
-                  'Thinking Level',
-                  _thinkingLevel,
-                  ThinkingLevel.values,
-                  (v) => setState(() => _thinkingLevel = v!),
-                  labels: {'none': 'None (fastest)', 'low': 'Low', 'medium': 'Medium', 'high': 'High (deepest)'},
+        body: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          children: [
+            _buildSectionHeader('API CONFIGURATION'),
+            _buildListTile(
+              'Gemini API Key',
+              subtitle: 'Required for voice features',
+              trailing: _buildTextField(_apiKeyController, obscure: true, hint: 'AIza...'),
+            ),
+            _buildDivider(),
+            _buildListTile(
+              'Model',
+              trailing: _buildTextField(_modelController, hint: 'gemini-2.0-flash-live-001'),
+            ),
+            
+            const SizedBox(height: 32),
+            _buildSectionHeader('AI BEHAVIOR'),
+            _buildListTile(
+              'System Prompt',
+              subtitle: 'Instructions for the AI persona',
+              onTap: () => _showPromptDialog(),
+            ),
+            _buildDivider(),
+            _buildListTile(
+              'Temperature',
+              subtitle: _temperature.toStringAsFixed(1),
+              trailing: Expanded(
+                child: Slider(
+                  value: _temperature,
+                  min: 0.0,
+                  max: 2.0,
+                  activeColor: Colors.white,
+                  inactiveColor: Colors.white24,
+                  onChanged: (v) => setState(() => _temperature = double.parse(v.toStringAsFixed(1))),
                 ),
-                const SizedBox(height: 16),
-                _dropdown<AppLanguage>(
-                  'Language',
-                  _language,
-                  AppLanguage.values,
-                  (v) => setState(() => _language = v!),
-                  labels: {'auto': 'Auto-detect', 'ru': 'Russian', 'en': 'English'},
+              ),
+            ),
+            _buildDivider(),
+            _buildDropdownTile<ThinkingLevel>(
+              'Thinking Level',
+              _thinkingLevel,
+              ThinkingLevel.values,
+              (v) => setState(() => _thinkingLevel = v!),
+              labels: {'none': 'None', 'low': 'Low', 'medium': 'Medium', 'high': 'High'},
+            ),
+            _buildDivider(),
+            _buildDropdownTile<AppLanguage>(
+              'Language',
+              _language,
+              AppLanguage.values,
+              (v) => setState(() => _language = v!),
+              labels: {'auto': 'Auto', 'ru': 'Russian', 'en': 'English'},
+            ),
+
+            const SizedBox(height: 32),
+            _buildSectionHeader('WAKE WORD'),
+            _buildListTile(
+              'Trigger Phrase',
+              subtitle: 'Say "Gemini"',
+            ),
+            _buildDivider(),
+            _buildListTile(
+              'Sensitivity',
+              subtitle: _wakeWordSensitivity.toStringAsFixed(2),
+              trailing: Expanded(
+                child: Slider(
+                  value: _wakeWordSensitivity,
+                  min: 0.1,
+                  max: 1.0,
+                  activeColor: Colors.white,
+                  inactiveColor: Colors.white24,
+                  onChanged: (v) => setState(() => _wakeWordSensitivity = double.parse(v.toStringAsFixed(2))),
                 ),
-              ]),
-              _sectionHeader('Wake Word'),
-              _card([
-                Row(
-                  children: [
-                    const Icon(Icons.mic, color: AppColors.primary, size: 18),
-                    const SizedBox(width: 8),
-                    const Text('Trigger: say "Gemini"', style: TextStyle(color: AppColors.textSecondary)),
-                  ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+            _buildSectionHeader('ALWAYS-ON DISPLAY'),
+            _buildDropdownTile<AodClockStyle>(
+              'Clock Style',
+              _aodClockStyle,
+              AodClockStyle.values,
+              (v) => setState(() => _aodClockStyle = v!),
+            ),
+            _buildDivider(),
+            _buildListTile(
+              'Drift Speed',
+              subtitle: '${_aodScrollSpeed}s',
+              trailing: Expanded(
+                child: Slider(
+                  value: _aodScrollSpeed.toDouble(),
+                  min: 10,
+                  max: 120,
+                  activeColor: Colors.white,
+                  inactiveColor: Colors.white24,
+                  onChanged: (v) => setState(() => _aodScrollSpeed = v.round()),
                 ),
-                const SizedBox(height: 12),
-                _slider('Sensitivity', _wakeWordSensitivity, 0.1, 1.0,
-                    (v) => setState(() => _wakeWordSensitivity = double.parse(v.toStringAsFixed(2))),
-                    label2: _wakeWordSensitivity.toStringAsFixed(2)),
-              ]),
-              _sectionHeader('Always-On Display'),
-              _card([
-                const Text('Clock Style', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                const SizedBox(height: 8),
-                Row(
-                  children: AodClockStyle.values.map((style) => Expanded(
-                    child: RadioListTile<AodClockStyle>(
-                      title: Text(style.name, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-                      value: style,
-                      groupValue: _aodClockStyle,
-                      onChanged: (v) => setState(() => _aodClockStyle = v!),
-                      activeColor: AppColors.primary,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  )).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 48),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ElevatedButton(
+                onPressed: _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                const SizedBox(height: 12),
-                _slider(
-                  'Drift Speed (${_aodScrollSpeed}s)',
-                  _aodScrollSpeed.toDouble(), 10, 120,
-                  (v) => setState(() => _aodScrollSpeed = v.round()),
-                ),
-              ]),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: () => context.read<SettingsBloc>().add(UpdateSettingsEvent(_buildSettings())),
-                  icon: const Icon(Icons.save),
-                  label: const Text('Save Settings', style: TextStyle(fontSize: 16, letterSpacing: 1)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ).animate().fadeIn(delay: 200.ms),
-              const SizedBox(height: 40),
-            ],
-          ),
+                child: const Text('Save Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              ),
+            ),
+            const SizedBox(height: 48),
+          ],
         ),
       ),
     );
   }
 
-  Widget _sectionHeader(String title) => Padding(
-    padding: const EdgeInsets.fromLTRB(0, 24, 0, 8),
-    child: Text(
-      title.toUpperCase(),
-      style: const TextStyle(
-        color: AppColors.primary,
-        fontSize: 11,
-        letterSpacing: 2,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  );
-
-  Widget _card(List<Widget> children) => Container(
-    decoration: BoxDecoration(
-      color: AppColors.surfaceElevated,
-      borderRadius: BorderRadius.circular(16),
-    ),
-    padding: const EdgeInsets.all(20),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
-  );
-
-  Widget _apiKeyField() => TextField(
-    controller: _apiKeyController,
-    obscureText: !_showApiKey,
-    style: const TextStyle(color: AppColors.textPrimary, fontFamily: 'monospace'),
-    decoration: InputDecoration(
-      labelText: 'Gemini API Key',
-      labelStyle: const TextStyle(color: AppColors.textSecondary),
-      hintText: 'AIza...',
-      hintStyle: const TextStyle(color: AppColors.textDim),
-      suffixIcon: IconButton(
-        icon: Icon(_showApiKey ? Icons.visibility_off : Icons.visibility, color: AppColors.textDim),
-        onPressed: () => setState(() => _showApiKey = !_showApiKey),
-      ),
-      enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.textDim)),
-      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
-    ),
-  );
-
-  Widget _textField(String label, TextEditingController controller, {String? hint}) => TextField(
-    controller: controller,
-    style: const TextStyle(color: AppColors.textPrimary),
-    decoration: InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: AppColors.textSecondary),
-      hintText: hint,
-      hintStyle: const TextStyle(color: AppColors.textDim),
-      enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.textDim)),
-      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
-    ),
-  );
-
-  Widget _systemPromptField() => TextField(
-    controller: _systemPromptController,
-    maxLines: 5,
-    style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-    decoration: InputDecoration(
-      labelText: 'System Prompt',
-      labelStyle: const TextStyle(color: AppColors.textSecondary),
-      alignLabelWithHint: true,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.textDim),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.textDim),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.primary),
-      ),
-    ),
-  );
-
-  Widget _slider(String label, double value, double min, double max, ValueChanged<double> onChanged, {String? label2}) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-          if (label2 != null)
-            Text(label2, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13)),
+  void _showPromptDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1C1C1E),
+        title: const Text('System Prompt', style: TextStyle(color: Colors.white, fontSize: 18)),
+        content: TextField(
+          controller: _systemPromptController,
+          maxLines: 8,
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            hintText: 'Enter persona instructions...',
+            hintStyle: TextStyle(color: Colors.white30),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Done', style: TextStyle(color: Colors.white)),
+          ),
         ],
       ),
-      Slider(
-        value: value,
-        min: min,
-        max: max,
-        onChanged: onChanged,
-        activeColor: AppColors.primary,
-        inactiveColor: AppColors.surfaceElevated,
-      ),
-    ],
-  );
+    );
+  }
 
-  Widget _dropdown<T extends Enum>(String label, T value, List<T> values, ValueChanged<T?> onChanged, {Map<String, String>? labels}) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-      const SizedBox(height: 4),
-      DropdownButton<T>(
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, bottom: 8, top: 16),
+      child: Text(
+        title,
+        style: const TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1.2),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Divider(color: Colors.white12, height: 1, indent: 20);
+  }
+
+  Widget _buildListTile(String title, {String? subtitle, Widget? trailing, VoidCallback? onTap}) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400)),
+      subtitle: subtitle != null ? Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 14)) : null,
+      trailing: trailing,
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildDropdownTile<T extends Enum>(String title, T value, List<T> items, ValueChanged<T?> onChanged, {Map<String, String>? labels}) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400)),
+      trailing: DropdownButton<T>(
         value: value,
-        isExpanded: true,
-        dropdownColor: AppColors.surfaceElevated,
-        style: const TextStyle(color: AppColors.textPrimary),
-        underline: const Divider(color: AppColors.textDim, height: 1),
-        items: values.map((v) => DropdownMenuItem(
+        dropdownColor: const Color(0xFF1C1C1E),
+        style: const TextStyle(color: Colors.white70, fontSize: 16),
+        underline: const SizedBox(),
+        icon: const Icon(Icons.chevron_right, color: Colors.white38),
+        items: items.map((v) => DropdownMenuItem(
           value: v,
           child: Text(labels?[v.name] ?? v.name),
         )).toList(),
         onChanged: onChanged,
       ),
-    ],
-  );
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, {bool obscure = false, String? hint}) {
+    return SizedBox(
+      width: 150,
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        textAlign: TextAlign.end,
+        style: const TextStyle(color: Colors.white70, fontSize: 16),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.white24),
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {

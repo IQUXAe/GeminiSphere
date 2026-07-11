@@ -194,12 +194,11 @@ class _ActiveScreen extends StatelessWidget {
   Widget _buildPortrait(BuildContext context) {
     return Stack(
       children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.3),
-              radius: 1.2,
-              colors: [Color(0xFF0D0D1A), AppColors.background],
+        Positioned.fill(
+          child: BlocBuilder<SessionBloc, SessionState>(
+            builder: (ctx, sessionState) => SphereAnimationWidget(
+              phase: sessionState.phase,
+              amplitude: sessionState.audioAmplitude,
             ),
           ),
         ),
@@ -211,10 +210,7 @@ class _ActiveScreen extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: BlocBuilder<SessionBloc, SessionState>(
-                    builder: (ctx, sessionState) => SphereAnimationWidget(
-                      phase: sessionState.phase,
-                      amplitude: sessionState.audioAmplitude,
-                    ),
+                    builder: (ctx, sessionState) => _buildCenterContent(sessionState.phase),
                   ),
                 ),
               ),
@@ -242,12 +238,11 @@ class _ActiveScreen extends StatelessWidget {
   Widget _buildLandscape(BuildContext context) {
     return Stack(
       children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(-0.5, 0),
-              radius: 1.5,
-              colors: [Color(0xFF0D0D1A), AppColors.background],
+        Positioned.fill(
+          child: BlocBuilder<SessionBloc, SessionState>(
+            builder: (ctx, sessionState) => SphereAnimationWidget(
+              phase: sessionState.phase,
+              amplitude: sessionState.audioAmplitude,
             ),
           ),
         ),
@@ -257,10 +252,7 @@ class _ActiveScreen extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: BlocBuilder<SessionBloc, SessionState>(
-                    builder: (ctx, sessionState) => SphereAnimationWidget(
-                      phase: sessionState.phase,
-                      amplitude: sessionState.audioAmplitude,
-                    ),
+                    builder: (ctx, sessionState) => _buildCenterContent(sessionState.phase),
                   ),
                 ),
               ),
@@ -289,6 +281,37 @@ class _ActiveScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildCenterContent(SessionPhase phase) {
+    switch (phase) {
+      case SessionPhase.listening:
+        return const Icon(Icons.mic, color: Colors.white, size: 48)
+            .animate(onPlay: (c) => c.repeat())
+            .scaleXY(begin: 1.0, end: 1.2, duration: 600.ms, curve: Curves.easeInOut)
+            .then()
+            .scaleXY(begin: 1.2, end: 1.0, duration: 600.ms);
+      case SessionPhase.speaking:
+        return const Icon(Icons.volume_up, color: Colors.white, size: 48)
+            .animate(onPlay: (c) => c.repeat())
+            .scaleXY(begin: 1.0, end: 1.15, duration: 300.ms)
+            .then()
+            .scaleXY(begin: 1.15, end: 1.0, duration: 300.ms);
+      case SessionPhase.connecting:
+        return const SizedBox(
+          width: 40,
+          height: 40,
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+        );
+      case SessionPhase.toolCalling:
+        return const Icon(Icons.settings, color: Colors.white, size: 40)
+            .animate(onPlay: (c) => c.repeat())
+            .rotate(duration: 1000.ms);
+      case SessionPhase.error:
+        return const Icon(Icons.error_outline, color: Colors.white, size: 48);
+      case SessionPhase.idle:
+        return Icon(Icons.graphic_eq, color: AppColors.textDim, size: 40);
+    }
   }
 
   Widget _buildTopBar(BuildContext context) {

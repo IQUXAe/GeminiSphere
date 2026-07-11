@@ -31,7 +31,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final result = await _saveSettings(event.settings);
     result.fold(
       (f) => emit(SettingsError(f.message)),
-      (_) => emit(SettingsSaved(event.settings)),
+      (_) => emit(SettingsLoaded(event.settings)),
     );
   }
 
@@ -39,7 +39,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final result = await _saveSettings(AppSettings.defaults);
     result.fold(
       (f) => emit(SettingsError(f.message)),
-      (_) => emit(SettingsSaved(AppSettings.defaults)),
+      (_) => emit(SettingsLoaded(AppSettings.defaults)),
     );
   }
 }

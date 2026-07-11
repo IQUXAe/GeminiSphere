@@ -56,7 +56,9 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
 
   void _initWakeWordListener() {
     _wakeWordSub = _wakeWordRepo.wakeWordStream.listen((event) {
-      add(WakeWordDetected(event.keyword));
+      if (state.phase == SessionPhase.idle) {
+        add(WakeWordDetected(event.keyword));
+      }
     });
     _wakeWordRepo.startListening();
   }
@@ -71,6 +73,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     }
     
     emit(state.copyWith(phase: SessionPhase.connecting));
+    await _wakeWordRepo.stopListening();
     
     final settingsResult = await _loadSettings();
     final settings = settingsResult.fold(
@@ -187,6 +190,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   ) async {
     await _cleanupSession();
     emit(state.copyWith(phase: SessionPhase.idle));
+    _wakeWordRepo.startListening();
   }
 
   Future<void> _onSessionInterrupted(
@@ -203,6 +207,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   ) async {
     await _cleanupSession();
     emit(state.copyWith(phase: SessionPhase.idle));
+    _wakeWordRepo.startListening();
   }
 
   Future<void> _onConnectionLost(
@@ -218,6 +223,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     Future.delayed(const Duration(seconds: 3), () {
       if (!isClosed && state.phase == SessionPhase.error) {
         emit(state.copyWith(phase: SessionPhase.idle));
+        _wakeWordRepo.startListening();
       }
     });
   }

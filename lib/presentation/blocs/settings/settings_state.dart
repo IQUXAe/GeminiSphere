@@ -18,8 +18,3 @@ final class SettingsError extends SettingsState {
   const SettingsError(this.message);
   @override List<Object?> get props => [message];
 }
-final class SettingsSaved extends SettingsState {
-  final AppSettings settings;
-  const SettingsSaved(this.settings);
-  @override List<Object?> get props => [settings];
-}

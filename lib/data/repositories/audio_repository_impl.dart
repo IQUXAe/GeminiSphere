@@ -38,7 +38,7 @@ class AudioRepositoryImpl implements IAudioRepository {
   }
 
   @override
-  Stream<List<int>> get microphoneStream => _mic.stream ?? const Stream.empty();
+  Stream<List<int>> get microphoneStream => _mic.stream;
 
   @override
   Future<Either<Failure, void>> playAudioChunk(List<int> pcmData) async {

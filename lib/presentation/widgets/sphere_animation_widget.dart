@@ -1,12 +1,11 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_theme.dart';
 import '../blocs/session/session_state.dart';
 
 class SphereAnimationWidget extends StatefulWidget {
   final SessionPhase phase;
-  final double amplitude; // 0.0 - 1.0, from PCM RMS
+  final double amplitude; // 0.0 - 1.0
 
   const SphereAnimationWidget({
     super.key,
@@ -20,263 +19,217 @@ class SphereAnimationWidget extends StatefulWidget {
 
 class _SphereAnimationWidgetState extends State<SphereAnimationWidget>
     with TickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late AnimationController _rotationController;
-  late AnimationController _blobController;
-  late Animation<double> _pulseAnim;
+  late AnimationController _waveController;
+  late AnimationController _colorController;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
+    _waveController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
-
-    _rotationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 8),
+      duration: const Duration(seconds: 12),
     )..repeat();
 
-    _blobController = AnimationController(
+    _colorController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2400),
+      duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
-
-    _pulseAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
   }
 
   @override
   void didUpdateWidget(SphereAnimationWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _updateAnimationSpeed();
+    if (oldWidget.phase != widget.phase) {
+      _updateAnimationSpeed();
+    }
   }
 
   void _updateAnimationSpeed() {
     switch (widget.phase) {
       case SessionPhase.listening:
-        _pulseController.duration = const Duration(milliseconds: 1200);
+        _waveController.duration = const Duration(seconds: 8);
         break;
       case SessionPhase.speaking:
-        _pulseController.duration = const Duration(milliseconds: 400);
+        _waveController.duration = const Duration(seconds: 3);
         break;
       case SessionPhase.connecting:
-        _pulseController.duration = const Duration(milliseconds: 800);
+      case SessionPhase.toolCalling:
+        _waveController.duration = const Duration(seconds: 6);
         break;
       default:
-        _pulseController.duration = const Duration(milliseconds: 2500);
+        _waveController.duration = const Duration(seconds: 15);
+    }
+    if (_waveController.isAnimating) {
+      _waveController.repeat();
     }
   }
 
-  (Color, Color) get _gradientColors {
+  (Color, Color, Color) get _gradientColors {
     switch (widget.phase) {
       case SessionPhase.listening:
-        return (AppColors.sphereListeningStart, AppColors.sphereListeningEnd);
+        return (AppColors.sphereListeningStart, AppColors.sphereListeningEnd, Colors.deepPurple);
       case SessionPhase.speaking:
-        return (AppColors.sphereSpeakingStart, AppColors.sphereSpeakingEnd);
+        return (AppColors.sphereSpeakingStart, AppColors.sphereSpeakingEnd, Colors.cyan);
       case SessionPhase.connecting:
-        return (AppColors.primary, AppColors.primaryLight);
       case SessionPhase.toolCalling:
-        return (AppColors.secondary, AppColors.secondaryLight);
+        return (AppColors.primary, AppColors.primaryLight, Colors.indigo);
       case SessionPhase.error:
-        return (AppColors.error, Colors.redAccent);
+        return (AppColors.error, Colors.redAccent, Colors.deepOrange);
       case SessionPhase.idle:
-        return (AppColors.sphereIdleColor, AppColors.sphereIdleColor);
+      default:
+        return (Colors.black, const Color(0xFF0D0D1A), const Color(0xFF151525));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final (startColor, endColor) = _gradientColors;
-    final sphereSize = MediaQuery.of(context).size.shortestSide * 0.55;
+    final (color1, color2, color3) = _gradientColors;
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_pulseController, _rotationController, _blobController]),
+      animation: Listenable.merge([_waveController, _colorController]),
       builder: (context, child) {
-        final scale = _pulseAnim.value + widget.amplitude * 0.15;
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // Outer glow rings
-            if (widget.phase != SessionPhase.idle) ..._buildGlowRings(sphereSize, startColor),
-            // Main sphere
-            Transform.scale(
-              scale: scale,
-              child: CustomPaint(
-                size: Size(sphereSize, sphereSize),
-                painter: _SpherePainter(
-                  startColor: startColor,
-                  endColor: endColor,
-                  rotation: _rotationController.value,
-                  blobOffset: _blobController.value,
-                  amplitude: widget.amplitude,
-                ),
-              ),
-            ),
-            // Center icon/text
-            _buildCenterContent(),
-          ],
+        return CustomPaint(
+          size: Size.infinite,
+          painter: _AuroraPainter(
+            time: _waveController.value * 2 * pi,
+            colorPhase: _colorController.value,
+            amplitude: widget.amplitude,
+            color1: color1,
+            color2: color2,
+            color3: color3,
+            isActive: widget.phase != SessionPhase.idle,
+          ),
         );
       },
     );
   }
 
-  List<Widget> _buildGlowRings(double sphereSize, Color color) {
-    return [
-      Opacity(
-        opacity: 0.08 + widget.amplitude * 0.12,
-        child: Container(
-          width: sphereSize * 1.6,
-          height: sphereSize * 1.6,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [color.withOpacity(0.3), Colors.transparent],
-            ),
-          ),
-        ),
-      ),
-      Opacity(
-        opacity: 0.12 + widget.amplitude * 0.08,
-        child: Container(
-          width: sphereSize * 1.25,
-          height: sphereSize * 1.25,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [color.withOpacity(0.5), Colors.transparent],
-            ),
-          ),
-        ),
-      ),
-    ];
-  }
-
-  Widget _buildCenterContent() {
-    switch (widget.phase) {
-      case SessionPhase.listening:
-        return const Icon(Icons.mic, color: Colors.white, size: 32)
-            .animate(onPlay: (c) => c.repeat())
-            .scaleXY(begin: 1.0, end: 1.2, duration: 600.ms, curve: Curves.easeInOut)
-            .then()
-            .scaleXY(begin: 1.2, end: 1.0, duration: 600.ms);
-      case SessionPhase.speaking:
-        return const Icon(Icons.volume_up, color: Colors.white, size: 32)
-            .animate(onPlay: (c) => c.repeat())
-            .scaleXY(begin: 1.0, end: 1.15, duration: 300.ms)
-            .then()
-            .scaleXY(begin: 1.15, end: 1.0, duration: 300.ms);
-      case SessionPhase.connecting:
-        return const SizedBox(
-          width: 28,
-          height: 28,
-          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-        );
-      case SessionPhase.toolCalling:
-        return const Icon(Icons.settings, color: Colors.white, size: 28)
-            .animate(onPlay: (c) => c.repeat())
-            .rotate(duration: 1000.ms);
-      case SessionPhase.error:
-        return const Icon(Icons.error_outline, color: Colors.white, size: 32);
-      case SessionPhase.idle:
-        return Icon(Icons.graphic_eq, color: AppColors.textDim, size: 28);
-    }
-  }
-
   @override
   void dispose() {
-    _pulseController.dispose();
-    _rotationController.dispose();
-    _blobController.dispose();
+    _waveController.dispose();
+    _colorController.dispose();
     super.dispose();
   }
 }
 
-class _SpherePainter extends CustomPainter {
-  final Color startColor;
-  final Color endColor;
-  final double rotation;
-  final double blobOffset;
+class _AuroraPainter extends CustomPainter {
+  final double time;
+  final double colorPhase;
   final double amplitude;
+  final Color color1;
+  final Color color2;
+  final Color color3;
+  final bool isActive;
 
-  const _SpherePainter({
-    required this.startColor,
-    required this.endColor,
-    required this.rotation,
-    required this.blobOffset,
+  const _AuroraPainter({
+    required this.time,
+    required this.colorPhase,
     required this.amplitude,
+    required this.color1,
+    required this.color2,
+    required this.color3,
+    required this.isActive,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Fill background
+    final bgPaint = Paint()..color = Colors.black;
+    canvas.drawRect(Offset.zero & size, bgPaint);
+
+    if (!isActive) return; // Completely black when idle, or very subtle
+
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
+    final maxRadius = size.longestSide * 0.8;
 
-    // Draw the organic blob shape
-    final path = _buildBlobPath(center, radius);
-
-    // Gradient fill
-    final gradient = RadialGradient(
-      center: Alignment(
-        -0.3 + sin(rotation * 2 * pi) * 0.3,
-        -0.3 + cos(rotation * 2 * pi) * 0.3,
-      ),
-      radius: 1.0,
-      colors: [startColor, endColor, startColor.withOpacity(0.6)],
-      stops: const [0.0, 0.6, 1.0],
+    // We draw 3 overlapping fluid blobs with MaskFilter.blur for the Aurora effect
+    _drawBlob(
+      canvas,
+      center,
+      maxRadius * (0.5 + amplitude * 0.3),
+      time,
+      color1.withOpacity(0.4 + colorPhase * 0.2),
+      Offset(sin(time) * size.width * 0.2, cos(time) * size.height * 0.2),
     );
 
-    final paint = Paint()
-      ..shader = gradient.createShader(Rect.fromCircle(center: center, radius: radius))
-      ..style = PaintingStyle.fill;
+    _drawBlob(
+      canvas,
+      center,
+      maxRadius * (0.6 + amplitude * 0.4),
+      time + pi * 0.6,
+      color2.withOpacity(0.5 - colorPhase * 0.2),
+      Offset(cos(time * 1.3) * size.width * 0.3, sin(time * 0.8) * size.height * 0.2),
+    );
 
-    canvas.drawPath(path, paint);
-
-    // Specular highlight
-    final highlightPaint = Paint()
-      ..color = Colors.white.withOpacity(0.15)
-      ..style = PaintingStyle.fill;
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: center + Offset(-radius * 0.25, -radius * 0.25),
-        width: radius * 0.5,
-        height: radius * 0.3,
-      ),
-      highlightPaint,
+    _drawBlob(
+      canvas,
+      center,
+      maxRadius * (0.4 + amplitude * 0.5),
+      time + pi * 1.2,
+      color3.withOpacity(0.4),
+      Offset(sin(time * 0.7) * size.width * 0.1, cos(time * 1.1) * size.height * 0.3),
     );
   }
 
-  Path _buildBlobPath(Offset center, double radius) {
-    // Organic blob using bezier curves, animated with blobOffset and amplitude
+  void _drawBlob(Canvas canvas, Offset center, double radius, double phase, Color color, Offset drift) {
     final path = Path();
-    const points = 8;
+    const points = 6;
     final angleStep = 2 * pi / points;
 
     for (int i = 0; i < points; i++) {
-      final angle = i * angleStep + rotation * 2 * pi;
-      final wave = 1.0 +
-          sin(blobOffset * 2 * pi + i * 1.5) * (0.06 + amplitude * 0.08) +
-          cos(rotation * 4 * pi + i * 0.8) * 0.04;
+      final angle = i * angleStep;
+      // Organic distortion
+      final wave = 1.0 + sin(phase + i * 1.5) * 0.2 + cos(phase * 1.2 + i) * 0.15;
       final r = radius * wave;
-      final x = center.dx + r * cos(angle);
-      final y = center.dy + r * sin(angle);
+      final x = center.dx + drift.dx + r * cos(angle + phase * 0.2);
+      final y = center.dy + drift.dy + r * sin(angle + phase * 0.2);
+      
       if (i == 0) {
         path.moveTo(x, y);
       } else {
-        path.lineTo(x, y);
+        // Curve to next point
+        final prevAngle = (i - 1) * angleStep;
+        final prevWave = 1.0 + sin(phase + (i - 1) * 1.5) * 0.2 + cos(phase * 1.2 + (i - 1)) * 0.15;
+        final prevR = radius * prevWave;
+        final prevX = center.dx + drift.dx + prevR * cos(prevAngle + phase * 0.2);
+        final prevY = center.dy + drift.dy + prevR * sin(prevAngle + phase * 0.2);
+
+        final cpX = (prevX + x) / 2 + sin(phase + i) * radius * 0.2;
+        final cpY = (prevY + y) / 2 + cos(phase + i) * radius * 0.2;
+        path.quadraticBezierTo(cpX, cpY, x, y);
       }
     }
-    path.close();
-    return path;
+    
+    // Close smoothly
+    final firstAngle = 0.0;
+    final firstWave = 1.0 + sin(phase) * 0.2 + cos(phase * 1.2) * 0.15;
+    final firstR = radius * firstWave;
+    final firstX = center.dx + drift.dx + firstR * cos(firstAngle + phase * 0.2);
+    final firstY = center.dy + drift.dy + firstR * sin(firstAngle + phase * 0.2);
+    
+    final lastAngle = (points - 1) * angleStep;
+    final lastWave = 1.0 + sin(phase + (points - 1) * 1.5) * 0.2 + cos(phase * 1.2 + (points - 1)) * 0.15;
+    final lastR = radius * lastWave;
+    final lastX = center.dx + drift.dx + lastR * cos(lastAngle + phase * 0.2);
+    final lastY = center.dy + drift.dy + lastR * sin(lastAngle + phase * 0.2);
+
+    final cpX = (lastX + firstX) / 2 + sin(phase) * radius * 0.2;
+    final cpY = (lastY + firstY) / 2 + cos(phase) * radius * 0.2;
+    path.quadraticBezierTo(cpX, cpY, firstX, firstY);
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.4); // Huge blur for fluid effect
+
+    canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(_SpherePainter old) =>
-      old.rotation != rotation ||
-      old.blobOffset != blobOffset ||
+  bool shouldRepaint(_AuroraPainter old) =>
+      old.time != time ||
+      old.colorPhase != colorPhase ||
       old.amplitude != amplitude ||
-      old.startColor != startColor ||
-      old.endColor != endColor;
+      old.isActive != isActive ||
+      old.color1 != color1;
 }
