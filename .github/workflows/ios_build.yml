@@ -51,7 +51,7 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>application-identifier</key>
-              <string>com.example.googleAssistant</string>
+              <string>org.iquxae.geminisphere</string>
               <key>get-task-allow</key>
               <true/>
           </dict>

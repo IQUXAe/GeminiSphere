@@ -50,7 +50,7 @@ android {
             def keyAliasName = System.getenv("KEY_ALIAS")
             def keyAliasPassword = System.getenv("KEY_PASSWORD")
 
-            if (keystorePassword != null) {
+            if (keystorePassword != null && !keystorePassword.isEmpty()) {
                 storeFile file(keystorePath)
                 storePassword keystorePassword
                 keyAlias keyAliasName
